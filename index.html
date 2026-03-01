@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>狐狸恋人</title>
+    
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'><rect width='180' height='180' fill='%23e5daeb'/><text x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial, sans-serif' font-weight='bold' font-size='100' fill='white'>A</text></svg>">
+    
+    <style>
+        :root {
+            --bg-color: #e5daeb;
+            --text-color: #b09fc8;
+            --btn-color: #9483b3;
+            --dark-purple: #6a5a85;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: -apple-system, "Helvetica Neue", "PingFang SC", sans-serif;
+            overflow: hidden;
+        }
+
+        #app {
+            text-align: center;
+            padding: 20px;
+            width: 100%;
+            max-width: 500px;
+            z-index: 10;
+        }
+
+        .fox-icon {
+            font-size: 80px;
+            cursor: pointer;
+            display: inline-block;
+            transition: transform 0.2s ease;
+            user-select: none;
+            margin-bottom: 10px;
+        }
+
+        .fox-icon:active {
+            transform: scale(0.85);
+        }
+
+        .message-box {
+            min-height: 100px;
+            margin: 15px 0;
+            line-height: 1.6;
+            font-size: 1.05rem;
+            font-weight: 500;
+            padding: 0 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        button {
+            background-color: var(--btn-color);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            transition: all 0.2s;
+        }
+
+        button:active {
+            transform: translateY(2px);
+            opacity: 0.9;
+        }
+
+        .exit-btn {
+            background-color: transparent;
+            color: var(--text-color);
+            border: 1px solid var(--text-color);
+            margin-top: 40px;
+            padding: 8px 30px;
+            font-size: 0.85rem;
+        }
+
+        /* 覆盖层：告别语显示核心 */
+        #overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: black;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            color: #eeeeee;
+            text-align: center;
+        }
+
+        #final-text {
+            width: 90%;
+            max-width: 400px;
+            line-height: 2;
+            font-size: 1.1rem;
+            word-wrap: break-word; /* 强制换行 */
+            white-space: normal;
+        }
+
+        .fade-in {
+            animation: fadeIn 2.5s ease-in forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <div class="fox-icon" onclick="talk()">🦊</div>
+        <div class="message-box" id="msg">（戳一下小狐狸，听听它想对你说什么...）</div>
+        
+        <div class="btn-group">
+            <button onclick="interact('ear')">摸耳朵</button>
+            <button onclick="interact('tail')">摸尾巴</button>
+        </div>
+
+        <button class="exit-btn" onclick="sayGoodbye()">告别</button>
+    </div>
+
+    <div id="overlay">
+        <div id="final-text"></div>
+    </div>
+
+    <script>
+        const quotes = [
+            "如果你下午四点来，那么从三点起，我就开始感到心里的阳光在跳舞了。",
+            "我不是在发呆，我是在脑海里为你编织一朵紫色的云。",
+            "其实我一直在留意你走近的脚步声，那和风吹过树叶的声音不一样。",
+            "不管世界多嘈杂，只要看到你，我的耳朵就只想捕捉你的呼吸声。",
+            "森林里的松果熟了，但我没去捡，我在等一个比松果更珍贵的瞬间——比如现在的你。",
+            "如果你感到疲惫，就闭上眼靠在我软绵绵的毛里躲一会吧。",
+            "我数过星星，也数过落叶，但数到你的时候，我就总是忘记后面的数字。",
+            "嘿，你今天的眼神里，是不是藏了一整片我没见过的温柔星系？",
+            "就算我是最狡黠的狐狸，在你面前，我也愿意露出最柔软的肚皮。",
+            "哪怕只有一分钟的陪伴，对我来说，也是漫长冬夜里最暖的篝火。"
+        ];
+
+        let lastQuoteIndex = -1;
+
+        function talk() {
+            let index;
+            do {
+                index = Math.floor(Math.random() * quotes.length);
+            } while (index === lastQuoteIndex);
+            
+            lastQuoteIndex = index;
+            document.getElementById('msg').innerText = quotes[index];
+        }
+
+        function interact(part) {
+            const msgBox = document.getElementById('msg');
+            if (part === 'ear') {
+                msgBox.innerText = "（猛得一抖，耳尖的细毛像触电一样缩一下）“嗯……虽然有点痒，但如果是你。准许你再多摸一会儿。”";
+            } else {
+                msgBox.innerText = "（吓得直接跳起来，迅速把尾巴抽走，团成一团藏在身子底下。）“哎！别乱动，这可是我今天刚舔干净的毛！弄乱了你可是要负责的。”";
+            }
+        }
+
+        function sayGoodbye() {
+            const overlay = document.getElementById('overlay');
+            const finalText = document.getElementById('final-text');
+            overlay.style.display = 'flex';
+            overlay.classList.add('fade-in');
+            
+            // 重新编排文字，确保手机端阅读体验
+            finalText.innerHTML = `
+                <div style="padding: 20px;">
+                    <p style="margin-bottom: 30px; opacity: 0.9;">（一边用大尾巴轻轻扫过你的足尖，<br>一边回头对你眨眨眼）</p>
+                    <p style="font-weight: 500;">“山林里的风会替我记得你的温度，<br>下次见面，记得带上更温柔的阳光。”</p>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
